@@ -1,0 +1,31 @@
+﻿version: "3.7"
+
+networks:
+  mongo:
+    external: true
+  traefik-public:
+    external: true
+
+services:
+  conversations-api:
+    image: cr.yandex/IMAGE/conversations-api:main
+    env_file:
+      - .env
+    restart: on-failure
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.conversations-api.rule=Host(`DOMAIN`)
+      - traefik.http.routers.conversations-api-http.entrypoints=http
+      - traefik.http.routers.conversations-api-http.service=conversations-api
+      - traefik.http.routers.conversations-api-http.rule=Host(`DOMAIN`)
+      - traefik.http.routers.conversations-api-http.middlewares=https-redirect
+      - traefik.http.routers.conversations-api.entrypoints=https
+      - traefik.http.routers.conversations-api.tls=true
+      - traefik.http.routers.conversations-api.tls.certresolver=le
+      - traefik.http.services.conversations-api.loadbalancer.server.port=8000
+      - traefik.http.routers.conversations-api.service=conversations-api
+    
+    networks:
+      - mongo
+      - traefik-public
